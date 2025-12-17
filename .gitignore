@@ -1,0 +1,11 @@
+/vendor
+.env
+.env.local
+.vscode
+node_modules
+dist
+compose.lock
+.DS_Store
+.idea
+*.log
+*.tmp
