@@ -73,7 +73,7 @@ require('include/components.php');
     <link rel="stylesheet" href="<?php echo $sb_url . 'css/admin.css?v=' . SB_VERSION ?>" media="all" />
     <link rel="stylesheet" href="<?php echo $sb_url . 'css/responsive-admin.css?v=' . SB_VERSION ?>" media="(max-width: 464px)" />
     <?php
-    if ($connection_success && (($is_cloud && defined('SB_CLOUD_DEFAULT_RTL')) || sb_is_rtl())) {
+    if ($connection_success && (($is_cloud && defined('SB_CLOUD_DEFAULT_RTL')) || sb_is_rtl(sb_get_admin_language(false, 'en')))) {
         echo '<link rel="stylesheet" href="' . $sb_url . 'css/rtl-admin.css?v=' . SB_VERSION . '" />';
     }
     ?>

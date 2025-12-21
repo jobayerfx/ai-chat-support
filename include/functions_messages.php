@@ -40,6 +40,7 @@
  * 27. Delete conversation attachments
  * 28. Update the messages status
  * 29. Update the extra fields of a conversation
+ * 30. Get conversation source
  *
  */
 
@@ -622,7 +623,7 @@ function sb_get_last_agent_in_conversation($conversation_id) {
 }
 
 function sb_get_last_message($conversation_id, $exclude_message = false, $user_id = false) {
-    return sb_db_get('SELECT message, attachments, payload FROM sb_messages WHERE (message <> "" || attachments <> "")' . ($exclude_message ? (' AND message <> "' . sb_db_escape($exclude_message) . '"') : '') . ' AND conversation_id = ' . sb_db_escape($conversation_id, true) . ($user_id ? (' AND user_id = ' . sb_db_escape($user_id, true)) : '') . ' ORDER BY id DESC LIMIT 1');
+    return sb_db_get('SELECT * FROM sb_messages WHERE (message <> "" || attachments <> "")' . ($exclude_message ? (' AND message <> "' . sb_db_escape($exclude_message) . '"') : '') . ' AND conversation_id = ' . sb_db_escape($conversation_id, true) . ($user_id ? (' AND user_id = ' . sb_db_escape($user_id, true)) : '') . ' ORDER BY id DESC LIMIT 1');
 }
 
 function sb_delete_attachments($conversation_id = false, $message_id = false) {
@@ -662,6 +663,18 @@ function sb_update_conversation_extra($conversation_id, $extra = false, $extra_2
         }
     }
     return sb_db_query('UPDATE sb_conversations SET ' . str_replace('SET ,', 'SET ', ($extra !== false ? 'extra = "' . sb_db_escape($extra) . '"' : '') . ($extra_2 !== false ? ', extra_2 = "' . sb_db_escape($extra_2) . '"' : '') . ($extra_3 !== false ? ', extra_3 = "' . sb_db_escape($extra_3) . '"' : '') . ' WHERE id = ' . sb_db_escape($conversation_id, true)));
+}
+
+function sb_get_conversation_source($conversation_id) {
+    global $SB_CONVERSATION_SOURCES;
+    if (empty($SB_CONVERSATION_SOURCES)) {
+        $SB_CONVERSATION_SOURCES = [];
+    }
+    if (isset($SB_CONVERSATION_SOURCES[$conversation_id])) {
+        return $SB_CONVERSATION_SOURCES[$conversation_id];
+    }
+    $SB_CONVERSATION_SOURCES[$conversation_id] = sb_isset(sb_db_get('SELECT source FROM sb_conversations WHERE id = ' . sb_db_escape($conversation_id, true)), 'source', '');
+    return $SB_CONVERSATION_SOURCES[$conversation_id];
 }
 
 /*
@@ -722,11 +735,15 @@ function sb_send_message($sender_id, $conversation_id, $message = '', $attachmen
             }
         }
         if ($count_attachments) {
-            $attachments_json = '[';
+            $attachments_json = '';
             for ($i = 0; $i < $count_attachments; $i++) {
-                $attachments_json .= '[\"' . sb_db_escape($attachments[$i][0]) . '\", \"' . sb_db_escape($attachments[$i][1]) . '\"' . (isset($attachments[$i][2]) ? ', \"' . $attachments[$i][2] . '\"' : '') . '],';
+                if ($attachments[$i][0] && $attachments[$i][1]) {
+                    $attachments_json .= '[\"' . sb_db_escape($attachments[$i][0]) . '\", \"' . sb_db_escape($attachments[$i][1]) . '\"' . (isset($attachments[$i][2]) ? ', \"' . $attachments[$i][2] . '\"' : '') . '],';
+                }
             }
-            $attachments_json = substr($attachments_json, 0, -1) . ']';
+            if ($attachments_json) {
+                $attachments_json = '[' . substr($attachments_json, 0, -1) . ']';
+            }
         }
         if ($security || $user_id == sb_get_active_user_ID() || !empty($GLOBALS['SB_FORCE_ADMIN'])) {
 

@@ -12,7 +12,7 @@
 
 (function ($) {
 
-    var version = '3.8.3';
+    var version = '3.8.4';
     var main;
     var global;
     var upload_target;
@@ -1477,7 +1477,7 @@
                     extra: true
                 }, (response) => {
                     this.processArray(response);
-                    onSuccess();
+                    onSuccess(response);
                     SBF.event('SBGetUser', this);
                 });
             } else {
@@ -1810,7 +1810,7 @@
                             message = '';
                         }
                         attachments_code += `<div class="sb-player"><div class="sb-player-btn sb-icon-play"></div><div class="sb-player-speed"><div class="sb-player-speed-number">1</div><div class="sb-icon-close"></div></div><div class="sb-player-download sb-icon-arrow-down"></div><audio><source src="${url}" type="audio/mpeg"></audio></div>`;
-                    } else {
+                    } else if (url) {
                         attachments_code += `<a rel="noopener" target="_blank" href="${url}">${SBF.beautifyAttachmentName(attachments[i][0])}</a>`;
                     }
                 }
@@ -2395,6 +2395,9 @@
                     if (this.skip) {
                         this.skip = false;
                     }
+                    if (admin) {
+                        SBAdmin.conversations.previous_editor_text = false;
+                    }
                     this.busy(false);
                 });
 
@@ -2838,7 +2841,7 @@
                                 }
 
                                 // Sound notifications
-                                if (this.audio && ((!admin && is_agent) || (admin && !is_agent))) {
+                                if (this.audio &&  ((!admin && is_agent && CHAT_SETTINGS.sound) || (admin && !is_agent && SB_ADMIN_SETTINGS.sound))) {
                                     this.playSound();
                                 }
                             }
@@ -4360,8 +4363,9 @@
         flashNotification: function () {
             clearInterval(interval);
             interval = setInterval(function () {
-                if (SBChat.notifications.length) {
-                    document.title = document.title == document_title ? '(' + SBChat.notifications.length + ') ' + sb_('New message' + (SBChat.notifications.length > 1 ? 's' : '')) : document_title;
+                let count = admin ? SBAdmin.conversations.getNotificationsCounterCount() : SBChat.notifications.length;
+                if (count) {
+                    document.title = document.title == document_title ? '(' + count + ') ' + sb_('New message' + (count > 1 ? 's' : '')) : document_title;
                 }
             }, 2000);
         },

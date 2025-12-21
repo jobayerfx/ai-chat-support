@@ -523,19 +523,19 @@ function sb_delete_users($user_ids) {
         sb_db_query('DELETE FROM sb_settings WHERE name = "shopify_cart_' . $user_id . '" LIMIT 1');
     }
     $agent_ids = sb_get_agents_ids();
-    $is_agent = false;
+    $agent_ids_deleted = '';
     $agent_id_to_assign = false;
     foreach ($agent_ids as $agent_id) {
         if (in_array($agent_id, $user_ids)) {
-            $is_agent = true;
-        } else if (!$agent_id_to_assign) {
+            $agent_ids_deleted .= $agent_id . ',';
+        } else {
             $agent_id_to_assign = $agent_id;
         }
     }
-    if ($is_agent && $agent_id_to_assign) {
-        $agent_ids = implode(', ', $agent_ids);
-        sb_db_query('UPDATE sb_conversations SET agent_id = NULL WHERE agent_id IN (' . $agent_ids . ')');
-        sb_db_query('UPDATE sb_messages SET user_id = ' . $agent_id_to_assign . ' WHERE user_id IN (' . $agent_ids . ')');
+    if ($agent_ids_deleted && $agent_id_to_assign) {
+        $agent_ids_deleted = substr($agent_ids_deleted, 0, -1);
+        sb_db_query('UPDATE sb_conversations SET agent_id = NULL WHERE agent_id IN (' . $agent_ids_deleted . ')');
+        sb_db_query('UPDATE sb_messages SET user_id = ' . $agent_id_to_assign . ' WHERE user_id IN (' . $agent_ids_deleted . ')');
     }
 
     return sb_db_query('DELETE FROM sb_users WHERE id IN (' . $query . ')');
@@ -1509,7 +1509,7 @@ function sb_routing_find_best_agent($department = false, $is_ignore_count = fals
 }
 
 function sb_routing_is_active() {
-    return sb_get_multi_setting('queue', 'queue-active') || sb_get_multi_setting('routing', 'routing-active'); 
+    return sb_get_multi_setting('queue', 'queue-active') || sb_get_multi_setting('routing', 'routing-active');
 }
 
 ?>

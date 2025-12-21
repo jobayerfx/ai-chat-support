@@ -535,7 +535,9 @@ function sb_ajax_execute() {
         case 'open-ai-get-information':
             return sb_json_response(sb_open_ai_embeddings_get_information());
         case 'open-ai-playground-message':
-            return sb_json_response(sb_open_ai_playground_message($_POST['messages']));
+            return sb_json_response(sb_open_ai_playground_message($_POST['message'], sb_post('user_type', 'user'), sb_post('clear')));
+        case 'open-ai-playground-data':
+            return sb_json_response(sb_open_ai_dummy_data($_POST['action'], sb_post('extra')));
         case 'open-ai-flows-save':
             return sb_json_response(sb_flows_save($_POST['flows']));
         case 'open-ai-flows-get':

@@ -281,10 +281,9 @@ function sb_js_admin() {
     if (defined('SB_DIALOGFLOW')) {
         $settings['dialogflow'] = sb_get_multi_setting('google', 'dialogflow-active');
         $settings['open_ai_user_expressions'] = sb_get_multi_setting('open-ai', 'open-ai-user-expressions');
-        $settings['open_ai_prompt_rewrite'] = sb_get_multi_setting('open-ai', 'open-ai-prompt-message-rewrite');
-        $settings['smart_reply'] = sb_get_multi_setting('dialogflow-smart-reply', 'dialogflow-smart-reply-active') || sb_get_setting('ai-smart-reply'); // Deprecated: sb_get_multi_setting('dialogflow-smart-reply', 'dialogflow-smart-reply-active')
-        $settings['open_ai_model'] = function_exists('sb_open_ai_get_gpt_model') ? sb_open_ai_get_gpt_model() : 'gpt-3.5-turbo'; // Deprecated: function_exists('sb_open_ai_get_gpt_model') ? sb_open_ai_get_gpt_model() : 'gpt-3.5-turbo';
-        $settings['translation'] = sb_get_setting('google-translation') || sb_get_multi_setting('google', 'google-translation'); // Deprecated: sb_get_setting('google-translation')
+        $settings['smart_reply'] = sb_get_setting('ai-smart-reply');
+        $settings['open_ai_model'] = sb_open_ai_get_gpt_model();
+        $settings['translation'] =  sb_get_multi_setting('google', 'google-translation'); 
         $settings['multilingual_translation'] = sb_get_multi_setting('google', 'google-multilingual-translation');
         $settings['speech_recognition'] = sb_get_multi_setting('open-ai', 'open-ai-speech-recognition');
         $settings['note_data_scrape'] = sb_get_multi_setting('open-ai', 'open-ai-note-scraping') ? sb_open_ai_data_scraping_get_prompts('name') : false;

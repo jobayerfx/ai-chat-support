@@ -10,7 +10,7 @@ use Swoole\Http\Response;
  *
  */
 
-define('SB_VERSION', '3.8.2');
+define('SB_VERSION', '3.8.4');
 
 if (!defined('SB_PATH')) {
     $path = dirname(__DIR__, 1);
@@ -199,7 +199,7 @@ function sb_db_escape($value, $numeric = -1) {
     }
     $value = str_replace(['\"', '"'], ['"', '\"'], $value);
     $value = sb_sanatize_string($value);
-    $value = htmlspecialchars($value, ENT_NOQUOTES | ENT_SUBSTITUTE, 'utf-8');
+    $value = htmlspecialchars($value, ENT_NOQUOTES | ENT_SUBSTITUTE, 'utf-8', false);
     $value = str_replace('&amp;lt;', '&lt;', $value);
     return $value;
 }
@@ -665,9 +665,9 @@ function sb_get_user_language($user_id = false, $allow_browser_language = false)
     return $SB_LANGUAGE[0];
 }
 
-function sb_get_admin_language($user_id = false) {
+function sb_get_admin_language($user_id = false, $default = false) {
     $language = defined('SB_ADMIN_LANG') ? trim(strtolower(SB_ADMIN_LANG)) : (sb_get_setting('admin-auto-translations') ? trim(strtolower(sb_get_user_language($user_id ? $user_id : sb_get_active_user_ID()))) : false);
-    return $language && ($language != 'en' || defined('SB_CLOUD_DEFAULT_LANGUAGE_CODE')) ? $language : sb_defined('SB_CLOUD_DEFAULT_LANGUAGE_CODE', $language);
+    return $language && ($language != 'en' || defined('SB_CLOUD_DEFAULT_LANGUAGE_CODE')) ? $language : sb_defined('SB_CLOUD_DEFAULT_LANGUAGE_CODE', $language ? $language : $default);
 }
 
 function sb_language_code($language_code_full) {
@@ -682,9 +682,12 @@ function sb_language_code($language_code_full) {
     return substr($language_code_full, 0, 2);
 }
 
-function sb_get_language_code_by_name($language_name, &$language_codes = false) {
-    $language_codes = $language_codes ? $language_codes : sb_get_json_resource('languages/language-codes.json');
+function sb_get_language_code_by_name($language_name, &$language_codes = false, $is_name_by_code = false) {
+    $language_codes = empty($language_codes) ? sb_get_json_resource('languages/language-codes.json') : $language_codes;
     if (strlen($language_name) > 2) {
+        if ($is_name_by_code) {
+            return sb_isset($language_codes, strtolower($language_name));
+        }
         $language_code = ucfirst($language_name);
         foreach ($language_codes as $key => $value) {
             if ($language_code == $value) {
@@ -693,6 +696,11 @@ function sb_get_language_code_by_name($language_name, &$language_codes = false) 
         }
     }
     return $language_name;
+}
+
+function sb_get_language_name_by_code($language_code) {
+    $false = false;
+    return sb_get_language_code_by_name($language_code, $false, true);
 }
 
 function sb_is_rtl($language_code = false) {
@@ -852,18 +860,6 @@ function sb_update() {
 }
 
 function sb_updates_validation() {
-
-    // Temp. Deprecated
-    try {
-        if (!sb_is_debug()) {
-            sb_db_query('CREATE TABLE IF NOT EXISTS sb_archive (id int NOT NULL, user_id INT NOT NULL, message TEXT NOT NULL, creation_time DATETIME NOT NULL, status_code TINYINT DEFAULT 0, attachments TEXT, payload TEXT, conversation_id INT NOT NULL, PRIMARY KEY (id), FOREIGN KEY (user_id) REFERENCES sb_users(id) ON DELETE CASCADE, FOREIGN KEY (conversation_id) REFERENCES sb_conversations(id) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin');
-            sb_db_query('ALTER TABLE sb_conversations ADD COLUMN extra_3 varchar(191) AFTER extra_2');
-            sb_db_query('CREATE TABLE IF NOT EXISTS sb_articles (id INT NOT NULL AUTO_INCREMENT, title VARCHAR(191) NOT NULL, content TEXT NOT NULL, editor_js TEXT NOT NULL, nav TEXT, link VARCHAR(191), category VARCHAR(191), parent_category VARCHAR(191), language VARCHAR(2), parent_id INT, slug VARCHAR(191), update_time DATE NOT NULL, PRIMARY KEY (id), FOREIGN KEY (parent_id) REFERENCES sb_articles(id) ON DELETE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
-        }
-    } catch (Exception $exception) {
-    }
-    // Temp. Deprecated
-
     if (sb_isset($_COOKIE, 'sb-updates') != SB_VERSION && !sb_is_debug()) {
         sb_cloud_load();
         $save = false;

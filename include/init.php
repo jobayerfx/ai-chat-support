@@ -31,7 +31,7 @@ if (sb_is_cloud()) {
     if ($load !== true) {
         if ($load == 'config-file-missing') {
             die('<script>document.cookie="sb-login=;expires=Thu, 01 Jan 1970 00:00:01 GMT;path=/;";document.cookie="sb-cloud=;expires=Thu, 01 Jan 1970 00:00:01 GMT;path=/;";location.reload();</script>');
-        }
+        } 
         die('cloud-load-error');
     }
 }
