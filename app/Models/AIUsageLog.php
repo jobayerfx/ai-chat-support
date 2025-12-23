@@ -9,7 +9,7 @@ class AIUsageLog extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['tenant_id', 'conversation_id', 'tokens_used', 'cost'];
+    protected $fillable = ['tenant_id', 'conversation_id', 'tokens_used', 'cost', 'decision'];
 
     public function tenant()
     {
