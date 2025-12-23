@@ -13,10 +13,16 @@ class AIConversation extends Model
 
     protected $casts = [
         'messages' => 'array',
+        'ai_active' => 'boolean',
     ];
 
     public function tenant()
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    public function aiMessages()
+    {
+        return $this->hasMany(AIMessage::class);
     }
 }

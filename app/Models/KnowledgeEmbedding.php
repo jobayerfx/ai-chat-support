@@ -9,7 +9,7 @@ class KnowledgeEmbedding extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['knowledge_document_id', 'tenant_id', 'embedding'];
+    protected $fillable = ['knowledge_document_id', 'tenant_id', 'chunk_text', 'chunk_index', 'embedding'];
 
     public function knowledgeDocument()
     {
