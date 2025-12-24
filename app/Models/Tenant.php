@@ -9,7 +9,22 @@ class Tenant extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'domain', 'ai_enabled', 'owner_id'];
+    protected $fillable = [
+        'name',
+        'domain',
+        'ai_enabled',
+        'owner_id',
+        'confidence_threshold',
+        'human_override_enabled',
+        'auto_escalate_threshold'
+    ];
+
+    protected $casts = [
+        'ai_enabled' => 'boolean',
+        'confidence_threshold' => 'decimal:2',
+        'human_override_enabled' => 'boolean',
+        'auto_escalate_threshold' => 'decimal:2',
+    ];
 
     public function chatwootInboxes()
     {

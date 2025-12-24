@@ -41,6 +41,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{documentId}', [App\Http\Controllers\KnowledgeController::class, 'destroy']);
         Route::post('/{documentId}/reprocess', [App\Http\Controllers\KnowledgeController::class, 'reprocess']);
     });
+
+    // AI Configuration
+    Route::prefix('ai-config')->group(function () {
+        Route::get('/', [App\Http\Controllers\TenantAIConfigController::class, 'show']);
+        Route::put('/', [App\Http\Controllers\TenantAIConfigController::class, 'update']);
+        Route::post('/reset', [App\Http\Controllers\TenantAIConfigController::class, 'reset']);
+    });
 });
 
 // Chatwoot webhook
