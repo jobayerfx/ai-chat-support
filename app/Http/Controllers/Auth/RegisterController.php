@@ -3,16 +3,19 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\Tenant;
-use App\Models\User;
+use App\Services\TenantService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 
 class RegisterController extends Controller
 {
+    public function __construct(
+        private TenantService $tenantService
+    ) {}
+
+    /**
+     * Register a new user and create their tenant
+     */
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -37,41 +40,42 @@ class RegisterController extends Controller
         }
 
         try {
-            DB::beginTransaction();
-
-            // Create tenant
-            $tenant = Tenant::create([
+            // Prepare tenant and user data
+            $tenantData = [
                 'name' => $request->tenant_name,
                 'domain' => $request->domain,
-                'ai_enabled' => true,
-            ]);
+            ];
 
-            // Create user as tenant owner
-            $user = User::create([
+            $userData = [
                 'name' => $request->name,
                 'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'tenant_id' => $tenant->id,
-            ]);
+                'password' => $request->password,
+            ];
 
-            // Update tenant with owner_id
-            $tenant->update(['owner_id' => $user->id]);
+            // Validate data using service
+            $validatedTenantData = $this->tenantService->validateTenantData($tenantData);
+            $validatedUserData = $this->tenantService->validateUserData($userData);
 
-            DB::commit();
-
-            // Generate token
-            $token = $user->createToken('auth_token')->plainTextToken;
+            // Create tenant with owner
+            $result = $this->tenantService->createTenantWithOwner(
+                $validatedTenantData,
+                $validatedUserData
+            );
 
             return response()->json([
                 'message' => 'Registration successful',
-                'user' => $user,
-                'tenant' => $tenant,
-                'token' => $token,
+                'user' => $result['user'],
+                'tenant' => $result['tenant'],
+                'token' => $result['token'],
             ], 201);
 
-        } catch (\Exception $e) {
-            DB::rollBack();
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'error' => $e->getMessage()
+            ], 422);
 
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Registration failed',
                 'error' => $e->getMessage()
