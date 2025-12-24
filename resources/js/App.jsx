@@ -6,6 +6,7 @@ import { AuthProvider } from './auth/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
+import Onboarding from './pages/Onboarding';
 import Login from './components/Login';
 
 function App() {
@@ -23,6 +24,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/onboarding"
+            element={
+              <ProtectedRoute>
+                <Onboarding />
               </ProtectedRoute>
             }
           />

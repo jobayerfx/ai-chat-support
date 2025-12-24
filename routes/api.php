@@ -56,8 +56,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/reset', [App\Http\Controllers\TenantAIConfigController::class, 'reset']);
     });
 
-    // Onboarding status
-    Route::middleware('tenant.scope')->get('/onboarding/status', [App\Http\Controllers\OnboardingController::class, 'status']);
+    // Onboarding endpoints
+    Route::middleware('tenant.scope')->group(function () {
+        Route::get('/onboarding/status', [App\Http\Controllers\OnboardingController::class, 'status']);
+        Route::post('/onboarding/chatwoot/connect', [App\Http\Controllers\OnboardingController::class, 'connectChatwoot']);
+        Route::post('/onboarding/ai/enable', [App\Http\Controllers\OnboardingController::class, 'enableAi']);
+    });
 });
 
 // Chatwoot webhook
