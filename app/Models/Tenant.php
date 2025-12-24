@@ -55,4 +55,9 @@ class Tenant extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function settings()
+    {
+        return $this->hasOne(TenantSettings::class);
+    }
 }
