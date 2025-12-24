@@ -1,9 +1,9 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import Signup from './components/Signup';
+import App from './App.jsx';
 import './bootstrap';
 
-// Create React root and render the Signup component
+// Create React root and render the App component
 const container = document.getElementById('app');
 const root = createRoot(container);
-root.render(<Signup />);
+root.render(<App />);
