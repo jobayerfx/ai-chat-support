@@ -15,7 +15,7 @@ class TenantService
      *
      * @param array $tenantData
      * @param array $userData
-     * @return array Returns ['tenant' => Tenant, 'user' => User, 'token' => string]
+     * @return array Returns ['tenant' => Tenant, 'user' => User]
      * @throws \Exception
      */
     public function createTenantWithOwner(array $tenantData, array $userData): array
@@ -42,9 +42,6 @@ class TenantService
             // Update tenant with owner_id
             $tenant->update(['owner_id' => $user->id]);
 
-            // Generate Sanctum token
-            $token = $user->createToken('auth_token')->plainTextToken;
-
             Log::info('Tenant created with owner', [
                 'tenant_id' => $tenant->id,
                 'tenant_name' => $tenant->name,
@@ -56,7 +53,6 @@ class TenantService
             return [
                 'tenant' => $tenant,
                 'user' => $user,
-                'token' => $token,
             ];
         });
     }

@@ -62,11 +62,13 @@ class RegisterController extends Controller
                 $validatedUserData
             );
 
+            // Log the user in for SPA session
+            \Illuminate\Support\Facades\Auth::login($result['user']);
+
             return response()->json([
                 'message' => 'Registration successful',
-                'user' => $result['user'],
+                'user' => $result['user']->load('tenant'),
                 'tenant' => $result['tenant'],
-                'token' => $result['token'],
             ], 201);
 
         } catch (\InvalidArgumentException $e) {

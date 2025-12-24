@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Validator;
 class LoginController extends Controller
 {
     /**
-     * Authenticate user and return token
+     * Authenticate user and establish session
      */
     public function login(Request $request)
     {
@@ -28,35 +28,33 @@ class LoginController extends Controller
             ], 422);
         }
 
-        // Find user by email
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        // Attempt authentication
+        if (!Auth::attempt($request->only('email', 'password'))) {
             return response()->json([
                 'message' => 'Invalid credentials'
             ], 401);
         }
 
-        // Delete existing tokens (optional - single session)
-        $user->tokens()->delete();
+        // Regenerate session for security
+        $request->session()->regenerate();
 
-        // Generate new token
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $user = Auth::user();
 
         return response()->json([
             'message' => 'Login successful',
             'user' => $user->load('tenant'),
-            'token' => $token,
         ]);
     }
 
     /**
-     * Logout user (revoke token)
+     * Logout user and invalidate session
      */
     public function logout(Request $request)
     {
-        // Revoke the token that made the request
-        $request->user()->currentAccessToken()->delete();
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return response()->json([
             'message' => 'Logged out successfully'
