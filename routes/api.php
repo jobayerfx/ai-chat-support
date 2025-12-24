@@ -55,6 +55,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/', [App\Http\Controllers\TenantAIConfigController::class, 'update']);
         Route::post('/reset', [App\Http\Controllers\TenantAIConfigController::class, 'reset']);
     });
+
+    // Onboarding status
+    Route::middleware('tenant.scope')->get('/onboarding/status', [App\Http\Controllers\OnboardingController::class, 'status']);
 });
 
 // Chatwoot webhook
