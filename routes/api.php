@@ -31,6 +31,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/connections', [App\Http\Controllers\ChatwootConnectionController::class, 'getConnections']);
         Route::delete('/connections/{connectionId}', [App\Http\Controllers\ChatwootConnectionController::class, 'disconnect']);
     });
+
+    // Knowledge management
+    Route::prefix('knowledge')->group(function () {
+        Route::post('/upload', [App\Http\Controllers\KnowledgeController::class, 'upload']);
+        Route::post('/upload-text', [App\Http\Controllers\KnowledgeController::class, 'uploadText']);
+        Route::get('/', [App\Http\Controllers\KnowledgeController::class, 'index']);
+        Route::get('/{documentId}', [App\Http\Controllers\KnowledgeController::class, 'show']);
+        Route::delete('/{documentId}', [App\Http\Controllers\KnowledgeController::class, 'destroy']);
+        Route::post('/{documentId}/reprocess', [App\Http\Controllers\KnowledgeController::class, 'reprocess']);
+    });
 });
 
 // Chatwoot webhook
