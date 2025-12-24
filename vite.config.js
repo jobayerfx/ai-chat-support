@@ -17,6 +17,16 @@ export default defineConfig({
                 sw: 'resources/sw.js',
             },
         },
+        // PWA optimizations
+        manifest: true,
+        sourcemap: false,
+        minify: 'terser',
+        terserOptions: {
+            compress: {
+                drop_console: true,
+                drop_debugger: true,
+            },
+        },
     },
     server: {
         host: '127.0.0.1',
@@ -24,5 +34,9 @@ export default defineConfig({
         hmr: {
             host: '127.0.0.1',
         },
+    },
+    // PWA specific optimizations
+    define: {
+        __PWA_ENV__: JSON.stringify(process.env.NODE_ENV),
     },
 });

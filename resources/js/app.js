@@ -1,9 +1,20 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import App from './App.jsx';
-import './bootstrap';
+import { BrowserRouter } from 'react-router-dom';
 
-// Create React root and render the App component
+// Import main App component
+import App from './App.jsx';
+
+// Create root element for React 18
 const container = document.getElementById('app');
 const root = createRoot(container);
-root.render(<App />);
+
+// Render the app with BrowserRouter
+// AuthContext will be added later in the App component
+root.render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </React.StrictMode>
+);
