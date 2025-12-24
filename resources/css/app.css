@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles for the signup form */
+.form-section {
+  @apply px-3 py-2 border border-gray-300;
+}
+
+.form-section:first-child {
+  @apply rounded-t-md bg-gray-50;
+}
+
+.form-section:last-child {
+  @apply rounded-b-md;
+}
+
+.form-section:only-child {
+  @apply rounded-md;
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Focus styles for better accessibility */
+.focus-ring:focus {
+  @apply ring-2 ring-indigo-500 ring-offset-2 outline-none;
+}
