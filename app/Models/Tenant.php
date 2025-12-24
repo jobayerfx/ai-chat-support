@@ -9,7 +9,7 @@ class Tenant extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'domain', 'ai_enabled'];
+    protected $fillable = ['name', 'domain', 'ai_enabled', 'owner_id'];
 
     public function chatwootInboxes()
     {
@@ -29,5 +29,15 @@ class Tenant extends Model
     public function aiUsageLogs()
     {
         return $this->hasMany(AIUsageLog::class);
+    }
+
+    public function owner()
+    {
+        return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function users()
+    {
+        return $this->hasMany(User::class);
     }
 }

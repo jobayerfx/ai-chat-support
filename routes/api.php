@@ -19,5 +19,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+// Auth routes
+Route::post('/register', [App\Http\Controllers\Auth\RegisterController::class, 'register']);
+
 // Chatwoot webhook
 Route::post('/webhooks/chatwoot', [ChatwootWebhookController::class, 'handle']);
