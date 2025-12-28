@@ -62,6 +62,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/onboarding/chatwoot/connect', [App\Http\Controllers\OnboardingController::class, 'connectChatwoot']);
         Route::post('/onboarding/ai/enable', [App\Http\Controllers\OnboardingController::class, 'enableAi']);
     });
+
+    // Simple knowledge document management
+    Route::middleware('tenant.scope')->group(function () {
+        Route::post('/knowledge/search', [App\Http\Controllers\SimpleKnowledgeController::class, 'search']);
+        Route::post('/knowledge', [App\Http\Controllers\SimpleKnowledgeController::class, 'store']);
+        Route::get('/knowledge', [App\Http\Controllers\SimpleKnowledgeController::class, 'index']);
+        Route::delete('/knowledge/{id}', [App\Http\Controllers\SimpleKnowledgeController::class, 'destroy']);
+    });
 });
 
 // Chatwoot webhook
