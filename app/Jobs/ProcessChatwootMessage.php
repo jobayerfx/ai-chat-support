@@ -91,7 +91,16 @@ class ProcessChatwootMessage implements ShouldQueue
                 return;
             }
 
-            $messageEligibility = $eligibilityService->checkMessageEligibility($this->tenant, $messageContent);
+            // Build conversation context for eligibility checks
+            $conversationContext = [
+                'conversation_id' => $conversationId,
+                'inbox_id' => $inboxId,
+                // These would be populated from Chatwoot API in a real implementation
+                'recent_agent_messages' => 0, // Number of recent agent messages
+                'last_agent_message_time' => null, // Timestamp of last agent message
+            ];
+
+            $messageEligibility = $eligibilityService->checkMessageEligibility($this->tenant, $messageContent, $conversationContext);
             if (!$messageEligibility['eligible']) {
                 Log::info('Message not eligible for AI processing', [
                     'tenant_id' => $this->tenant->id,
@@ -104,6 +113,19 @@ class ProcessChatwootMessage implements ShouldQueue
 
             // Step 3: Retrieve knowledge
             $knowledgeContext = $knowledgeService->retrieveRelevantKnowledge($this->tenant, $messageContent);
+
+            // Step 4: Check knowledge confidence
+            $confidenceCheck = $eligibilityService->checkKnowledgeConfidence($knowledgeContext, $messageContent);
+            if (!$confidenceCheck['confident']) {
+                Log::info('Knowledge confidence too low for AI processing', [
+                    'tenant_id' => $this->tenant->id,
+                    'conversation_id' => $conversationId,
+                    'confidence_score' => $confidenceCheck['confidence_score'],
+                    'reason' => $confidenceCheck['reason']
+                ]);
+                $usageLogger->logUsage($this->tenant->id, $conversationId, 0, 'low_confidence');
+                return;
+            }
 
             if (empty($knowledgeContext)) {
                 Log::info('No knowledge found for message', [
@@ -151,9 +173,8 @@ class ProcessChatwootMessage implements ShouldQueue
             }
 
             // Step 7: Log AI usage
-            // Estimate tokens used (rough calculation: 4 chars per token)
-            $estimatedTokens = (strlen($prompt) + strlen($aiResponse)) / 4;
-            $usageLogger->logUsage($this->tenant->id, $conversationId, (int)$estimatedTokens, 'ai');
+            $estimatedTokens = $chatCompletion->estimateTokens($prompt, $aiResponse);
+            $chatCompletion->logUsage($this->tenant->id, $conversationId, $estimatedTokens, 'ai');
 
             // Mark as processed to prevent double replies
             Cache::put($cacheKey, true, 3600); // Cache for 1 hour

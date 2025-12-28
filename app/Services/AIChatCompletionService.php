@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use App\Services\AIUsageLoggerService;
 
 class AIChatCompletionService
 {
@@ -22,10 +23,10 @@ class AIChatCompletionService
     private const MAX_REQUESTS_PER_MINUTE = 1000;
 
     /**
-     * Generate chat completion using OpenAI API
+     * Generate chat completion using OpenAI API with usage logging
      *
      * @param string $prompt The complete prompt
-     * @param array $options Additional options (model, temperature, max_tokens)
+     * @param array $options Additional options (model, temperature, max_tokens, tenant_id, conversation_id)
      * @return string|null The generated response text or null on failure
      */
     public function generateCompletion(string $prompt, array $options = []): ?string
@@ -236,5 +237,46 @@ class AIChatCompletionService
             'remaining_requests' => max(0, self::MAX_REQUESTS_PER_MINUTE - $currentRequests),
             'can_make_request' => $currentRequests < self::MAX_REQUESTS_PER_MINUTE,
         ];
+    }
+
+    /**
+     * Log AI usage for billing and analytics
+     *
+     * @param int $tenantId
+     * @param int $conversationId
+     * @param int $tokensUsed
+     * @param string $decision 'ai', 'human', 'ineligible', etc.
+     * @return bool Success status
+     */
+    public function logUsage(int $tenantId, int $conversationId, int $tokensUsed, string $decision = 'ai'): bool
+    {
+        try {
+            $usageLogger = app(AIUsageLoggerService::class);
+            return $usageLogger->logUsage($tenantId, $conversationId, $tokensUsed, $decision);
+        } catch (\Exception $e) {
+            Log::error('Failed to log AI usage in completion service', [
+                'tenant_id' => $tenantId,
+                'conversation_id' => $conversationId,
+                'tokens_used' => $tokensUsed,
+                'decision' => $decision,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Estimate tokens used for a prompt and response
+     *
+     * @param string $prompt
+     * @param string $response
+     * @return int Estimated token count
+     */
+    public function estimateTokens(string $prompt, string $response = ''): int
+    {
+        // Rough estimation: ~4 characters per token for English text
+        // This is a simplification - actual tokenization is more complex
+        $totalChars = strlen($prompt) + strlen($response);
+        return (int)ceil($totalChars / 4);
     }
 }
