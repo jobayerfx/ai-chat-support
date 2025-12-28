@@ -10,6 +10,14 @@ const Knowledge = () => {
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState(null);
 
+  // Upload states
+  const [uploadTitle, setUploadTitle] = useState('');
+  const [uploadContent, setUploadContent] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState(null);
+  const [uploadSuccess, setUploadSuccess] = useState(null);
+
   // Poll for document status
   useEffect(() => {
     fetchDocuments();
@@ -69,6 +77,81 @@ const Knowledge = () => {
 
   const isKnowledgeReady = () => {
     return documents.some(doc => doc.knowledge_embeddings_count > 0);
+  };
+
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    if (!uploadTitle.trim() || !uploadContent.trim()) return;
+
+    setUploading(true);
+    setUploadProgress(0);
+    setUploadError(null);
+    setUploadSuccess(null);
+
+    try {
+      // Simulate progress for better UX
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => Math.min(prev + 10, 90));
+      }, 200);
+
+      const response = await fetch('/api/knowledge', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          title: uploadTitle.trim(),
+          content: uploadContent.trim(),
+        }),
+      });
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
+      if (response.ok) {
+        const data = await response.json();
+        setUploadSuccess('Document uploaded successfully! Processing will begin shortly.');
+        setUploadTitle('');
+        setUploadContent('');
+        // Refresh documents list
+        fetchDocuments();
+      } else {
+        const errorData = await response.json();
+        setUploadError(errorData.message || 'Upload failed');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      setUploadError('Upload failed. Please try again.');
+    } finally {
+      setUploading(false);
+      setTimeout(() => setUploadProgress(0), 1000);
+    }
+  };
+
+  const handleDelete = async (documentId) => {
+    if (!confirm('Are you sure you want to delete this document? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/knowledge/${documentId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Accept': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        setDocuments(prev => prev.filter(doc => doc.id !== documentId));
+      } else {
+        console.error('Failed to delete document');
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+    }
   };
 
   const handleSearch = async (e) => {
@@ -175,6 +258,88 @@ const Knowledge = () => {
             </div>
           </div>
 
+          {/* Upload Form */}
+          <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
+            <div className="p-6">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Upload Document</h2>
+              <form onSubmit={handleUpload} className="space-y-4">
+                <div>
+                  <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+                    Document Title
+                  </label>
+                  <input
+                    type="text"
+                    id="title"
+                    value={uploadTitle}
+                    onChange={(e) => setUploadTitle(e.target.value)}
+                    placeholder="Enter document title..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    required
+                    disabled={uploading}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
+                    Document Content
+                  </label>
+                  <textarea
+                    id="content"
+                    value={uploadContent}
+                    onChange={(e) => setUploadContent(e.target.value)}
+                    placeholder="Paste your document content here..."
+                    rows={8}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 resize-vertical"
+                    required
+                    disabled={uploading}
+                  />
+                  <p className="mt-1 text-sm text-gray-500">
+                    {uploadContent.length} characters
+                  </p>
+                </div>
+
+                {uploading && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>Uploading...</span>
+                      <span>{uploadProgress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${uploadProgress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={uploading || !uploadTitle.trim() || !uploadContent.trim()}
+                  className={`w-full px-4 py-2 rounded-md text-white font-medium ${
+                    uploading || !uploadTitle.trim() || !uploadContent.trim()
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+                  }`}
+                >
+                  {uploading ? 'Uploading...' : 'Upload Document'}
+                </button>
+              </form>
+
+              {uploadError && (
+                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-sm text-red-600">{uploadError}</p>
+                </div>
+              )}
+
+              {uploadSuccess && (
+                <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
+                  <p className="text-sm text-green-600">{uploadSuccess}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Search */}
           <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
             <div className="p-6">
@@ -256,8 +421,17 @@ const Knowledge = () => {
                             Embeddings: {doc.knowledge_embeddings_count}
                           </p>
                         </div>
-                        <div className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(getDocumentStatus(doc))}`}>
-                          {getDocumentStatus(doc)}
+                        <div className="flex items-center space-x-2">
+                          <div className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(getDocumentStatus(doc))}`}>
+                            {getDocumentStatus(doc)}
+                          </div>
+                          <button
+                            onClick={() => handleDelete(doc.id)}
+                            className="px-3 py-1 text-xs text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
+                            title="Delete document"
+                          >
+                            Delete
+                          </button>
                         </div>
                       </div>
                     </div>
