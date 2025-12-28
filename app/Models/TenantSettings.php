@@ -33,6 +33,11 @@ class TenantSettings extends Model
         'monthly_active_users',
         'total_conversations',
         'ai_responses_count',
+        'business_hours_enabled',
+        'timezone',
+        'business_start_time',
+        'business_end_time',
+        'business_days',
     ];
 
     protected $casts = [
@@ -48,6 +53,8 @@ class TenantSettings extends Model
         'auto_escalate_threshold' => 'decimal:2',
         'email_notifications' => 'boolean',
         'ai_response_notifications' => 'boolean',
+        'business_hours_enabled' => 'boolean',
+        'business_days' => 'array',
     ];
 
     /**

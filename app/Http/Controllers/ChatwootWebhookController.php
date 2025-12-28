@@ -19,14 +19,20 @@ class ChatwootWebhookController extends Controller
 
     public function handle(Request $request)
     {
+        // Log raw payload for debugging
+        $payload = $request->all();
+        Log::info('Raw Chatwoot webhook payload', ['payload' => $payload]);
+
         // Validate request structure
-        $validator = Validator::make($request->all(), [
+        $validator = Validator::make($payload, [
             'event' => 'required|string',
             'data' => 'required|array',
             'data.inbox' => 'required|array',
             'data.inbox.id' => 'required|string',
             'data.conversation' => 'required|array',
             'data.conversation.id' => 'required|integer',
+            'data.sender' => 'required|array',
+            'data.sender.type' => 'required|string',
             'data.message_type' => 'required|string',
             'data.content' => 'required|string',
         ]);
@@ -34,41 +40,32 @@ class ChatwootWebhookController extends Controller
         if ($validator->fails()) {
             Log::warning('Invalid webhook payload structure', [
                 'errors' => $validator->errors(),
-                'payload' => $request->all()
+                'payload' => $payload
             ]);
             return response()->json(['error' => 'Invalid payload'], 400);
         }
 
-        // Verify webhook signature
+        // Verify webhook signature (if provided)
         if (!$this->validateSignature($request)) {
             Log::warning('Invalid Chatwoot webhook signature');
             return response()->json(['error' => 'Invalid signature'], 401);
         }
-
-        $payload = $request->all();
-
-        // Log webhook payload safely
-        Log::info('Chatwoot webhook received', [
-            'event' => $payload['event'],
-            'inbox_id' => $payload['data']['inbox']['id'],
-            'conversation_id' => $payload['data']['conversation']['id'],
-            'message_type' => $payload['data']['message_type'],
-        ]);
 
         // Only handle message.created events
         if ($payload['event'] !== 'message.created') {
             return response()->json(['status' => 'ignored']);
         }
 
-        // Ignore agent/system messages (only process incoming user messages)
-        if ($payload['data']['message_type'] !== 'incoming') {
-            return response()->json(['status' => 'ignored']);
-        }
-
         // Extract required data
         $inboxId = $payload['data']['inbox']['id'];
         $conversationId = $payload['data']['conversation']['id'];
-        $message = $payload['data']['content'];
+        $messageContent = $payload['data']['content'];
+        $senderType = $payload['data']['sender']['type'];
+
+        // Ignore bot messages and agent messages
+        if (in_array($senderType, ['bot', 'agent'])) {
+            return response()->json(['status' => 'ignored']);
+        }
 
         // Resolve tenant using TenantResolverService
         $tenant = $this->tenantResolver->resolveFromInboxId($inboxId);
@@ -76,7 +73,8 @@ class ChatwootWebhookController extends Controller
         if (!$tenant) {
             Log::error('Tenant resolution failed for webhook', [
                 'inbox_id' => $inboxId,
-                'conversation_id' => $conversationId
+                'conversation_id' => $conversationId,
+                'sender_type' => $senderType
             ]);
             return response()->json(['error' => 'Tenant not found'], 404);
         }

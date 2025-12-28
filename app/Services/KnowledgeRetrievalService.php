@@ -10,8 +10,7 @@ use App\Models\Tenant;
 class KnowledgeRetrievalService
 {
     private EmbeddingClient $embeddingClient;
-    private int $defaultLimit = 5;
-    private float $similarityThreshold = 0.8; // Minimum cosine similarity
+    private int $defaultLimit = 3;
 
     public function __construct(EmbeddingClient $embeddingClient)
     {
@@ -25,7 +24,6 @@ class KnowledgeRetrievalService
      * @param string $message
      * @param int $limit
      * @return array Array of knowledge content strings
-     * @throws \Exception If no relevant knowledge found
      */
     public function retrieveRelevantKnowledge(Tenant $tenant, string $message, int $limit = null): array
     {
@@ -35,45 +33,31 @@ class KnowledgeRetrievalService
             // Generate embedding for user message
             $queryEmbedding = $this->embeddingClient->generateEmbedding($message);
 
+            if (!$queryEmbedding) {
+                Log::error('Failed to generate embedding for message', [
+                    'tenant_id' => $tenant->id,
+                    'message_length' => strlen($message)
+                ]);
+                return [];
+            }
+
             Log::info('Generated embedding for knowledge retrieval', [
                 'tenant_id' => $tenant->id,
                 'message_length' => strlen($message),
                 'embedding_dimension' => count($queryEmbedding)
             ]);
 
-            // Query pgvector for similar embeddings
+            // Query pgvector for top similar embeddings
             $results = $this->performVectorSearch($tenant->id, $queryEmbedding, $limit);
 
-            if (empty($results)) {
-                Log::warning('No knowledge found for query', [
-                    'tenant_id' => $tenant->id,
-                    'message' => substr($message, 0, 100)
-                ]);
-                throw new \Exception('No relevant knowledge found for the query');
-            }
-
-            // Filter by similarity threshold
-            $relevantResults = array_filter($results, function($result) {
-                return $result->similarity >= $this->similarityThreshold;
-            });
-
-            if (empty($relevantResults)) {
-                Log::warning('No knowledge above similarity threshold', [
-                    'tenant_id' => $tenant->id,
-                    'threshold' => $this->similarityThreshold,
-                    'best_similarity' => $results[0]->similarity ?? 0
-                ]);
-                throw new \Exception('No sufficiently relevant knowledge found');
-            }
-
+            // Extract text snippets only
             $knowledgeChunks = array_map(function($result) {
                 return $result->content;
-            }, array_slice($relevantResults, 0, $limit));
+            }, $results);
 
             Log::info('Retrieved knowledge chunks', [
                 'tenant_id' => $tenant->id,
-                'chunks_count' => count($knowledgeChunks),
-                'best_similarity' => $relevantResults[0]->similarity
+                'chunks_count' => count($knowledgeChunks)
             ]);
 
             return $knowledgeChunks;
@@ -83,23 +67,24 @@ class KnowledgeRetrievalService
                 'tenant_id' => $tenant->id,
                 'error' => $e->getMessage()
             ]);
-            throw $e;
+            return [];
         }
     }
 
     /**
      * Perform vector similarity search using pgvector
+     * Returns top matches ordered by cosine similarity (closest first)
      */
     private function performVectorSearch(int $tenantId, array $queryEmbedding, int $limit): array
     {
         // Convert embedding array to PostgreSQL vector format
         $embeddingString = '[' . implode(',', $queryEmbedding) . ']';
 
-        // pgvector cosine similarity search
+        // Optimized pgvector cosine similarity search
+        // <=> operator calculates cosine distance (1 - cosine similarity)
+        // Lower distance = higher similarity, so we order by distance ascending
         $sql = "
-            SELECT
-                kd.content,
-                1 - (ke.embedding <=> :embedding) as similarity
+            SELECT kd.content
             FROM knowledge_embeddings ke
             JOIN knowledge_documents kd ON ke.knowledge_document_id = kd.id
             WHERE ke.tenant_id = :tenant_id
@@ -115,21 +100,19 @@ class KnowledgeRetrievalService
     }
 
     /**
-     * Get SQL example for pgvector search
+     * Get optimized SQL example for pgvector search (top 3 matches)
      */
     public static function getPgvectorSearchExample(): string
     {
         return "
--- Example pgvector cosine similarity search
-SELECT
-    kd.title,
-    kd.content,
-    1 - (ke.embedding <=> '[0.1,0.2,0.3,...]') as cosine_similarity
+-- Optimized pgvector cosine similarity search for top 3 matches
+-- Returns only text snippets, tenant-scoped, ordered by similarity
+SELECT kd.content
 FROM knowledge_embeddings ke
 JOIN knowledge_documents kd ON ke.knowledge_document_id = kd.id
-WHERE ke.tenant_id = 1
-ORDER BY ke.embedding <=> '[0.1,0.2,0.3,...]'
-LIMIT 5;
+WHERE ke.tenant_id = :tenant_id
+ORDER BY ke.embedding <=> :embedding
+LIMIT 3;
         ";
     }
 }

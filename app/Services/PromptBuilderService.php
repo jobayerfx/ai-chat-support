@@ -5,114 +5,67 @@ namespace App\Services;
 class PromptBuilderService
 {
     /**
-     * Build the complete system prompt for AI processing
+     * Build the complete prompt for AI chat replies
      *
-     * @param array $knowledgeDocuments Array of knowledge document strings
-     * @param string $language Language code (en, es, fr, etc.)
+     * @param string $userMessage The user's message
+     * @param array $knowledgeContext Array of retrieved knowledge snippets
      * @return string Complete prompt string
      */
-    public function buildPrompt(array $knowledgeDocuments, string $language = 'en'): string
+    public function buildChatPrompt(string $userMessage, array $knowledgeContext): string
     {
-        $systemPrompt = $this->getSystemPrompt($language);
-        $knowledgeSection = $this->formatKnowledge($knowledgeDocuments, $language);
-        $fallbackInstructions = $this->getFallbackInstructions($language);
+        $systemPrompt = $this->getSystemPrompt();
+        $contextSection = $this->formatKnowledgeContext($knowledgeContext);
+        $userSection = $this->formatUserMessage($userMessage);
 
-        return $systemPrompt . "\n\n" . $knowledgeSection . "\n\n" . $fallbackInstructions;
+        return $systemPrompt . "\n\n" . $contextSection . "\n\n" . $userSection;
     }
 
     /**
-     * Get the base system prompt enforcing knowledge-only answers
+     * Get the system prompt for customer support agent behavior
      */
-    private function getSystemPrompt(string $language): string
+    private function getSystemPrompt(): string
     {
-        $prompts = [
-            'en' => "You are a knowledgeable AI assistant for a business support system. " .
-                   "You must ONLY answer questions using the knowledge documents provided below. " .
-                   "Do not use any external knowledge, make assumptions, or provide information not contained in the documents. " .
-                   "Be helpful, accurate, and concise in your responses.",
-
-            'es' => "Eres un asistente de IA conocedor para un sistema de soporte empresarial. " .
-                   "Debes RESPONDER SOLO preguntas usando los documentos de conocimiento proporcionados a continuación. " .
-                   "No uses conocimiento externo, hagas suposiciones o proporciones información no contenida en los documentos. " .
-                   "Sé útil, preciso y conciso en tus respuestas.",
-
-            'fr' => "Vous êtes un assistant IA compétent pour un système de support d'entreprise. " .
-                   "Vous devez SEULEMENT répondre aux questions en utilisant les documents de connaissance fournis ci-dessous. " .
-                   "N'utilisez pas de connaissances externes, ne faites pas d'hypothèses ou ne fournissez pas d'informations non contenues dans les documents. " .
-                   "Soyez utile, précis et concis dans vos réponses.",
-
-            'de' => "Sie sind ein kompetenter KI-Assistent für ein Geschäftssupportsystem. " .
-                   "Sie dürfen NUR Fragen beantworten, indem Sie die unten bereitgestellten Wissensdokumente verwenden. " .
-                   "Verwenden Sie kein externes Wissen, machen Sie keine Annahmen oder geben Sie Informationen, die nicht in den Dokumenten enthalten sind. " .
-                   "Seien Sie hilfreich, genau und präzise in Ihren Antworten.",
-        ];
-
-        return $prompts[$language] ?? $prompts['en'];
+        return "You are a customer support agent. Answer ONLY using the provided knowledge context. If the answer is not in the context, say exactly: \"I'll connect you with a human agent.\" Be helpful, accurate, and concise.";
     }
 
     /**
-     * Format the retrieved knowledge documents for injection
+     * Format the retrieved knowledge context for injection
      */
-    private function formatKnowledge(array $knowledgeDocuments, string $language): string
+    private function formatKnowledgeContext(array $knowledgeContext): string
     {
-        $headers = [
-            'en' => 'Knowledge Base Documents:',
-            'es' => 'Documentos de Base de Conocimiento:',
-            'fr' => 'Documents de Base de Connaissances:',
-            'de' => 'Wissensdatenbank-Dokumente:',
-        ];
-
-        $header = $headers[$language] ?? $headers['en'];
-
-        if (empty($knowledgeDocuments)) {
-            $emptyMessages = [
-                'en' => 'No knowledge documents are currently available.',
-                'es' => 'No hay documentos de conocimiento disponibles actualmente.',
-                'fr' => 'Aucun document de connaissance n\'est actuellement disponible.',
-                'de' => 'Derzeit sind keine Wissensdokumente verfügbar.',
-            ];
-            return $header . "\n" . ($emptyMessages[$language] ?? $emptyMessages['en']);
+        if (empty($knowledgeContext)) {
+            return "Knowledge Context: No relevant information available.";
         }
 
-        $formatted = $header . "\n\n";
-        foreach ($knowledgeDocuments as $index => $document) {
-            $formatted .= ($index + 1) . ". " . trim($document) . "\n\n";
+        $formatted = "Knowledge Context:\n";
+        foreach ($knowledgeContext as $index => $snippet) {
+            $formatted .= ($index + 1) . ". " . trim($snippet) . "\n";
         }
 
         return trim($formatted);
     }
 
     /**
-     * Get fallback instructions for when knowledge is insufficient
+     * Format the user message for the prompt
      */
-    private function getFallbackInstructions(string $language): string
+    private function formatUserMessage(string $userMessage): string
     {
-        $instructions = [
-            'en' => "Fallback Instructions:\n" .
-                   "If the user's question cannot be answered using ONLY the knowledge documents above, " .
-                   "respond with exactly: 'I'm sorry, but I don't have specific information about that in my knowledge base. " .
-                   "Please contact our support team for further assistance.'\n" .
-                   "Do not attempt to answer partially or provide general advice.",
+        return "User: " . trim($userMessage);
+    }
 
-            'es' => "Instrucciones de Respaldo:\n" .
-                   "Si la pregunta del usuario no puede responderse usando SOLO los documentos de conocimiento anteriores, " .
-                   "responde exactamente con: 'Lo siento, pero no tengo información específica sobre eso en mi base de conocimientos. " .
-                   "Por favor contacta a nuestro equipo de soporte para más asistencia.'\n" .
-                   "No intentes responder parcialmente o proporcionar consejos generales.",
+    /**
+     * Get a token-efficient version of the prompt (shorter system prompt)
+     */
+    public function buildCompactPrompt(string $userMessage, array $knowledgeContext): string
+    {
+        $systemPrompt = "Act as customer support agent. Answer ONLY using provided knowledge. If unknown, say: \"I'll connect you with a human agent.\"";
 
-            'fr' => "Instructions de Repli:\n" .
-                   "Si la question de l'utilisateur ne peut pas être répondue en utilisant SEULEMENT les documents de connaissance ci-dessus, " .
-                   "répondez exactement par : 'Je suis désolé, mais je n'ai pas d'informations spécifiques à ce sujet dans ma base de connaissances. " .
-                   "Veuillez contacter notre équipe de support pour une assistance supplémentaire.'\n" .
-                   "N'essayez pas de répondre partiellement ou de donner des conseils généraux.",
+        if (empty($knowledgeContext)) {
+            $context = "Knowledge: None available.";
+        } else {
+            $context = "Knowledge: " . implode(" | ", array_map('trim', $knowledgeContext));
+        }
 
-            'de' => "Fallback-Anweisungen:\n" .
-                   "Wenn die Frage des Benutzers NICHT ausschließlich mit den oben genannten Wissensdokumenten beantwortet werden kann, " .
-                   "antworten Sie genau mit: 'Es tut mir leid, aber ich habe keine spezifischen Informationen dazu in meiner Wissensdatenbank. " .
-                   "Bitte kontaktieren Sie unser Support-Team für weitere Unterstützung.'\n" .
-                   "Versuchen Sie nicht, teilweise zu antworten oder allgemeine Ratschläge zu geben.",
-        ];
-
-        return $instructions[$language] ?? $instructions['en'];
+        return $systemPrompt . "\n\n" . $context . "\n\nUser: " . trim($userMessage);
     }
 }
