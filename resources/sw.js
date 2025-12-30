@@ -1,8 +1,14 @@
-// Service Worker for PWA functionality
+// Service Worker for PWA functionality with Workbox injection
 const CACHE_NAME = 'ai-chat-v2.0';
 const STATIC_CACHE = 'ai-chat-static-v2.0';
 const API_CACHE = 'ai-chat-api-v2.0';
 const IMAGE_CACHE = 'ai-chat-images-v2.0';
+
+// Import workbox from CDN for injectManifest strategy
+importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
+
+// Workbox injection point - DO NOT REMOVE OR MODIFY
+workbox.precaching.precacheAndRoute(self.__WB_MANIFEST);
 
 // Resources to cache immediately
 const STATIC_ASSETS = [
