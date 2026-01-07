@@ -2,8 +2,12 @@
 
 namespace App\Providers;
 
+use App\Contracts\EmbeddingClient;
+use App\Contracts\LLMClient;
 use App\Models\Tenant;
 use App\Observers\TenantObserver;
+use App\Services\OpenAIEmbeddingClient;
+use App\Services\OpenAILLMClient;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -15,7 +19,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->bind(EmbeddingClient::class, OpenAIEmbeddingClient::class);
+        $this->app->bind(LLMClient::class, OpenAILLMClient::class);
     }
 
     /**

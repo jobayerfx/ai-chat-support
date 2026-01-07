@@ -6,7 +6,9 @@ const Signup = () => {
     name: '',
     email: '',
     password: '',
+    password_confirmation: '',
     tenant_name: '',
+    domain: '',
   });
 
   const [errors, setErrors] = useState({});
@@ -376,7 +378,46 @@ const Signup = () => {
             )}
           </div>
 
-          <div style={{ marginBottom: '2rem' }}>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label htmlFor="password_confirmation" style={{
+              display: 'block',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              color: '#374151',
+              marginBottom: '0.5rem'
+            }}>
+              Confirm Password
+            </label>
+            <input
+              id="password_confirmation"
+              name="password_confirmation"
+              type="password"
+              required
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: errors.password_confirmation ? '1px solid #dc2626' : '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '1rem',
+                backgroundColor: 'white',
+                boxSizing: 'border-box'
+              }}
+              placeholder="Confirm your password"
+              value={formData.password_confirmation}
+              onChange={handleInputChange}
+            />
+            {errors.password_confirmation && (
+              <p style={{
+                color: '#dc2626',
+                fontSize: '0.75rem',
+                marginTop: '0.25rem'
+              }}>
+                {errors.password_confirmation}
+              </p>
+            )}
+          </div>
+
+          <div style={{ marginBottom: '1.5rem' }}>
             <label htmlFor="tenant_name" style={{
               display: 'block',
               fontSize: '0.875rem',
@@ -411,6 +452,45 @@ const Signup = () => {
                 marginTop: '0.25rem'
               }}>
                 {errors.tenant_name}
+              </p>
+            )}
+          </div>
+
+          <div style={{ marginBottom: '2rem' }}>
+            <label htmlFor="domain" style={{
+              display: 'block',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              color: '#374151',
+              marginBottom: '0.5rem'
+            }}>
+              Domain
+            </label>
+            <input
+              id="domain"
+              name="domain"
+              type="text"
+              required
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: errors.domain ? '1px solid #dc2626' : '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '1rem',
+                backgroundColor: 'white',
+                boxSizing: 'border-box'
+              }}
+              placeholder="Enter your domain (e.g., mycompany)"
+              value={formData.domain}
+              onChange={handleInputChange}
+            />
+            {errors.domain && (
+              <p style={{
+                color: '#dc2626',
+                fontSize: '0.75rem',
+                marginTop: '0.25rem'
+              }}>
+                {errors.domain}
               </p>
             )}
           </div>

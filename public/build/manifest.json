@@ -1,0 +1,24 @@
+{
+  "resources/js/app.css": {
+    "file": "assets/app-2c43e164.css",
+    "src": "resources/js/app.css"
+  },
+  "resources/js/app.jsx": {
+    "css": [
+      "assets/app-2c43e164.css"
+    ],
+    "file": "assets/app-d503d0e5.js",
+    "isEntry": true,
+    "src": "resources/js/app.jsx"
+  },
+  "resources/js/sw.js": {
+    "file": "assets/spaSw-1acc9a72.js",
+    "isEntry": true,
+    "src": "resources/js/sw.js"
+  },
+  "resources/sw.js": {
+    "file": "assets/sw-b622e5ba.js",
+    "isEntry": true,
+    "src": "resources/sw.js"
+  }
+}

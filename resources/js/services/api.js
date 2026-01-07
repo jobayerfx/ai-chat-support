@@ -45,4 +45,12 @@ export const login = (data) => api.post('/api/login', data);
 export const logout = () => api.post('/api/logout');
 export const getUser = () => api.get('/api/user');
 
+// Auth API object for convenience
+export const authAPI = {
+  signup,
+  login,
+  logout,
+  getUser,
+};
+
 export default api;
