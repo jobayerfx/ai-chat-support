@@ -15,19 +15,12 @@ use App\Http\Controllers\ChatwootWebhookController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+
 
 // SPA CSRF protection
 Route::get('/sanctum/csrf-cookie', function (Request $request) {
     return response()->json(['message' => 'CSRF cookie set']);
 });
-
-// Auth routes for SPA
-Route::post('/register', [App\Http\Controllers\Auth\RegisterController::class, 'register']);
-Route::post('/login', [App\Http\Controllers\Auth\LoginController::class, 'login']);
-Route::middleware('auth:sanctum')->post('/logout', [App\Http\Controllers\Auth\LoginController::class, 'logout']);
 
 // Chatwoot connection wizard
 Route::middleware('auth:sanctum')->group(function () {

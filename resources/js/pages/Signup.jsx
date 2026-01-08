@@ -73,6 +73,13 @@ const Signup = () => {
       newErrors.tenant_name = 'Company name is required';
     }
 
+    // Domain validation
+    if (!formData.domain.trim()) {
+      newErrors.domain = 'Domain is required';
+    } else if (!/^[a-zA-Z0-9\-]+\.[a-zA-Z]{2,}$/.test(formData.domain)) {
+      newErrors.domain = 'Domain must be in format: domain.tld (e.g., mycompany.com)';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -480,7 +487,7 @@ const Signup = () => {
                 backgroundColor: 'white',
                 boxSizing: 'border-box'
               }}
-              placeholder="Enter your domain (e.g., mycompany)"
+              placeholder="Enter your domain (e.g., mycompany.com or mycompany-com.com)"
               value={formData.domain}
               onChange={handleInputChange}
             />

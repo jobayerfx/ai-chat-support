@@ -21,26 +21,27 @@ class TenantService
     public function createTenantWithOwner(array $tenantData, array $userData): array
     {
         return DB::transaction(function () use ($tenantData, $userData) {
-            // Create tenant
+            // Create user first (without tenant_id initially)
+            $user = User::create([
+                'name' => $userData['name'],
+                'email' => $userData['email'],
+                'password' => Hash::make($userData['password']),
+                'tenant_id' => null, // Will be set after tenant creation
+            ]);
+
+            // Create tenant with owner_id
             $tenant = Tenant::create([
                 'name' => $tenantData['name'],
                 'domain' => $tenantData['domain'],
+                'owner_id' => $user->id,
                 'ai_enabled' => $tenantData['ai_enabled'] ?? true,
                 'confidence_threshold' => $tenantData['confidence_threshold'] ?? 0.7,
                 'human_override_enabled' => $tenantData['human_override_enabled'] ?? true,
                 'auto_escalate_threshold' => $tenantData['auto_escalate_threshold'] ?? 0.4,
             ]);
 
-            // Create user as tenant owner
-            $user = User::create([
-                'name' => $userData['name'],
-                'email' => $userData['email'],
-                'password' => Hash::make($userData['password']),
-                'tenant_id' => $tenant->id,
-            ]);
-
-            // Update tenant with owner_id
-            $tenant->update(['owner_id' => $user->id]);
+            // Update user with tenant_id
+            $user->update(['tenant_id' => $tenant->id]);
 
             Log::info('Tenant created with owner', [
                 'tenant_id' => $tenant->id,
