@@ -13,6 +13,8 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Onboarding from './pages/Onboarding';
 import Knowledge from './pages/Knowledge';
+import AIConfig from './pages/AIConfig';
+import Analytics from './pages/Analytics';
 
 // Main App component
 const App = () => {
@@ -46,6 +48,22 @@ const App = () => {
           element={
             <ProtectedRoute>
               <Knowledge />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ai-config"
+          element={
+            <ProtectedRoute>
+              <AIConfig />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute>
+              <Analytics />
             </ProtectedRoute>
           }
         />

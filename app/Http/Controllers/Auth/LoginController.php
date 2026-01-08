@@ -38,11 +38,15 @@ class LoginController extends Controller
         // Regenerate session for security
         $request->session()->regenerate();
 
-        $user = Auth::user();
+        $user = Auth::user()->load('tenant');
+
+        // Create Sanctum token for API access
+        $token = $user->createToken('api-token')->plainTextToken;
 
         return response()->json([
             'message' => 'Login successful',
-            'user' => $user->load('tenant'),
+            'user' => $user,
+            'token' => $token,
         ]);
     }
 

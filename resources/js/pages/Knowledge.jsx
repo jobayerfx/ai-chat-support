@@ -28,6 +28,7 @@ const Knowledge = () => {
   const fetchDocuments = async () => {
     try {
       const response = await fetch('/api/knowledge', {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
           'Accept': 'application/json',

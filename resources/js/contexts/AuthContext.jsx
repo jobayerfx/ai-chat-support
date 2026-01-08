@@ -40,6 +40,12 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.login(credentials);
       const userData = response.data.user;
+      const token = response.data.token;
+
+      // Store token for API requests
+      if (token) {
+        localStorage.setItem('auth_token', token);
+      }
 
       setUser(userData);
       setTenant(userData.tenant || null);
@@ -75,7 +81,8 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Always clear local state
+      // Clear token and local state
+      localStorage.removeItem('auth_token');
       setUser(null);
       setTenant(null);
       setIsAuthenticated(false);

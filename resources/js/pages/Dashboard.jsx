@@ -316,17 +316,20 @@ const Dashboard = () => {
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
             gap: '1rem'
           }}>
-            <button style={{
-              padding: '1rem',
-              backgroundColor: '#4f46e5',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              cursor: 'pointer',
-              textAlign: 'left'
-            }}>
+            <button
+              onClick={() => navigate('/analytics')}
+              style={{
+                padding: '1rem',
+                backgroundColor: '#4f46e5',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                cursor: 'pointer',
+                textAlign: 'left'
+              }}
+            >
               <div style={{
                 fontSize: '1rem',
                 fontWeight: '600',
@@ -339,17 +342,20 @@ const Dashboard = () => {
               </div>
             </button>
 
-            <button style={{
-              padding: '1rem',
-              backgroundColor: '#059669',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              cursor: 'pointer',
-              textAlign: 'left'
-            }}>
+            <button
+              onClick={() => navigate('/ai-config')}
+              style={{
+                padding: '1rem',
+                backgroundColor: '#059669',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                cursor: 'pointer',
+                textAlign: 'left'
+              }}
+            >
               <div style={{
                 fontSize: '1rem',
                 fontWeight: '600',
@@ -362,17 +368,20 @@ const Dashboard = () => {
               </div>
             </button>
 
-            <button style={{
-              padding: '1rem',
-              backgroundColor: '#7c3aed',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              cursor: 'pointer',
-              textAlign: 'left'
-            }}>
+            <button
+              onClick={() => navigate('/knowledge')}
+              style={{
+                padding: '1rem',
+                backgroundColor: '#7c3aed',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                cursor: 'pointer',
+                textAlign: 'left'
+              }}
+            >
               <div style={{
                 fontSize: '1rem',
                 fontWeight: '600',
